@@ -37,7 +37,7 @@ class Layer():
         neurons = []
         x = self.__calculate_left_margin_so_layer_is_centered(number_of_neurons)
         for iteration in range(number_of_neurons):
-            neuron = Neuron(x, self.y, color)
+            neuron = Neuron(x, self.y)
             neurons.append(neuron)
             x += self.horizontal_distance_between_neurons
         return neurons
