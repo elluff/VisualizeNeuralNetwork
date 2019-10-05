@@ -1,8 +1,7 @@
   
 # This Libraray is modified based the work by Milo Spencer-Harper and Oli Blum, https://stackoverflow.com/a/37366154/10404826
 # On top of that, I added support for showing weights (linewidth, colors, etc.)
-# Contributor: Jianzheng Liu
-# Contact: jzliu.100@gmail.com
+
 
 import matplotlib.pyplot as plt
 from math import cos, sin, atan
@@ -19,8 +18,8 @@ class Neuron():
         self.x = x
         self.y = y
 
-    def draw(self, neuron_radius, id=-1):
-        circle = plt.Circle((self.x, self.y), radius=neuron_radius, fill=False)
+    def draw(self, neuron_radius, color='gray', id=-1):
+        circle = plt.Circle((self.x, self.y), radius=neuron_radius, fill=False, color=color)
         plt.gca().add_patch(circle)
     #    plt.gca().text(self.x, self.y-0.15, str(id), size=10, ha='center')
 
@@ -38,7 +37,7 @@ class Layer():
         neurons = []
         x = self.__calculate_left_margin_so_layer_is_centered(number_of_neurons)
         for iteration in range(number_of_neurons):
-            neuron = Neuron(x, self.y)
+            neuron = Neuron(x, self.y, color)
             neurons.append(neuron)
             x += self.horizontal_distance_between_neurons
         return neurons
@@ -65,9 +64,6 @@ class Layer():
         y_adjustment = self.neuron_radius * cos(angle)
 
         # assign colors to lines depending on the sign of the weight
-       # color=Tableau_10.mpl_colors[0]
-       # if weight > 0: color=Tableau_10.mpl_colors[1]
-        
         if weight > 0.8:
             color = 'darkred'
         elif weight > 0.5:
@@ -114,11 +110,21 @@ class Layer():
                              (neuron1.y - y_adjustment, neuron2.y + y_adjustment), linewidth=linewidth, color=color)
         plt.gca().add_line(line)
 
-    def draw(self, layerType=0, weights=None, textoverlaphandler=None):
+    def draw(self, layerType=0, weights=None, textoverlaphandler=None, nodes_weight=None):
         j=0 # index for neurons in this layer
         for neuron in self.neurons:            
             i=0 # index for neurons in previous layer
-            neuron.draw( self.neuron_radius, id=j+1 )
+
+            color = 'gray'
+            # set node color if output layer
+            if layerType == -1 and nodes_weight:
+                color = 'blue'
+                if nodes_weight[j] >= 0.7:
+                    color = 'red'
+                elif nodes_weight[j] > 0.3 and nodes_weight[j] < 0.7:
+                    color = 'orange'
+
+            neuron.draw( self.neuron_radius, color, id=j+1 )
             if self.previous_layer:
                 for previous_layer_neuron in self.previous_layer.neurons:
                     self.__line_between_two_neurons(neuron, previous_layer_neuron, weights[i,j], textoverlaphandler)
@@ -170,7 +176,7 @@ class NeuralNetwork():
         layer = Layer(self, number_of_neurons, self.number_of_neurons_in_widest_layer)
         self.layers.append(layer)
 
-    def draw(self, weights_list=None, epoch = None):
+    def draw(self, weights_list=None, output_nodes_w=None, epoch = None):
         # vertical_distance_between_layers and horizontal_distance_between_neurons
         # are the same with the variables of the same name in layer class
         vertical_distance_between_layers = 6
@@ -180,13 +186,13 @@ class NeuralNetwork():
             len(self.layers)*vertical_distance_between_layers, grid_size=0.2 )
 
         plt.figure(figsize=_figsize)
-        for i in range( len(self.layers) ):
+        for i in range(len(self.layers)):
             layer = self.layers[i]
-            if i == 0:
+            if i == 0:                    # input layet
                 layer.draw(layerType=0)
-            elif i == len(self.layers)-1:
-                layer.draw(layerType=-1, weights=weights_list[i-1], textoverlaphandler=overlaphandler)
-            else:
+            elif i == len(self.layers)-1: # output layer
+                layer.draw(layerType=-1, weights=weights_list[i-1], textoverlaphandler=overlaphandler, nodes_weight=None)
+            else: 
                 layer.draw(layerType=i, weights=weights_list[i-1], textoverlaphandler=overlaphandler)
 
         plt.axis('scaled')
@@ -205,9 +211,10 @@ class DrawNN():
     # 10 neurons in the hidden layer 1 and 1 neuron in the output layer is [5, 10, 1]
     # para: weights_list (optional) is the output weights list of a neural network which can
     # be obtained via classifier.coefs_
-    def __init__( self, neural_network, weights_list=None, epoch=None):
+    def __init__( self, neural_network, weights_list=None, output_nodes_weight=None, epoch=None):
         self.neural_network = neural_network
         self.weights_list = weights_list
+        self.output_nodes_w = output_nodes_weight        
         self.epoch = epoch
         # if weights_list is none, then create a uniform list to fill the weights_list
         if weights_list is None:
@@ -219,7 +226,7 @@ class DrawNN():
         
     def draw(self):
         widest_layer = max( self.neural_network )
-        network = NeuralNetwork( widest_layer )
+        network = NeuralNetwork(widest_layer)
         for l in self.neural_network:
             network.add_layer(l)
-        network.draw(self.weights_list, self.epoch)
+        network.draw(self.weights_list, self.output_nodes_w, self.epoch)
