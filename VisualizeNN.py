@@ -114,17 +114,17 @@ class Layer():
         j=0 # index for neurons in this layer
         for neuron in self.neurons:            
             i=0 # index for neurons in previous layer
-
-            color = 'gray'
+            
             # set node color if output layer
+            color = 'gray'
             if layerType == -1 and nodes_weight:
                 color = 'blue'
                 if nodes_weight[j] >= 0.7:
                     color = 'red'
                 elif nodes_weight[j] > 0.3 and nodes_weight[j] < 0.7:
                     color = 'orange'
-
-            neuron.draw( self.neuron_radius, color, id=j+1 )
+            
+            neuron.draw(self.neuron_radius, color, id=j+1)
             if self.previous_layer:
                 for previous_layer_neuron in self.previous_layer.neurons:
                     self.__line_between_two_neurons(neuron, previous_layer_neuron, weights[i,j], textoverlaphandler)
@@ -191,7 +191,8 @@ class NeuralNetwork():
             if i == 0:                    # input layet
                 layer.draw(layerType=0)
             elif i == len(self.layers)-1: # output layer
-                layer.draw(layerType=-1, weights=weights_list[i-1], textoverlaphandler=overlaphandler, nodes_weight=None)
+                layer.draw(layerType=-1, weights=weights_list[i-1], textoverlaphandler=overlaphandler,
+                           nodes_weight=output_nodes_w)
             else: 
                 layer.draw(layerType=i, weights=weights_list[i-1], textoverlaphandler=overlaphandler)
 
